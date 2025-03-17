@@ -32,7 +32,10 @@
 					"name": "select1"
 				},
 				{
-					"name": "window1"
+					"name": "window3h"
+				},
+				{
+					"name": "window24h"
 				}
 			],
 			"scriptLines": [
@@ -87,7 +90,13 @@
 				"          meanpressure_3h = mean(pressure),",
 				"          meanvibration_3h = mean(vibration),",
 				"          meanvolt_3h = mean(volt),",
-				"          stddevvolt_3h = stddev(volt)) ~> window1"
+				"          stddevvolt_3h = stddev(volt)) ~> window3h",
+				"window3h window(asc(ERROR_FUNCTION(''), true),",
+				"     rangeSpecified: true,",
+				"     startRowOffset: -24L,",
+				"     endRowOffset: 0L,",
+				"     mean24h_volt = mean(volt),",
+				"          mean24_rotate = mean(rotate)) ~> window24h"
 			]
 		}
 	}
