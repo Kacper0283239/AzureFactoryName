@@ -11,22 +11,37 @@
 					},
 					"name": "telemetria",
 					"description": "plik danych telemetrii"
+				},
+				{
+					"dataset": {
+						"referenceName": "DelimitedText3",
+						"type": "DatasetReference"
+					},
+					"name": "source2"
 				}
 			],
 			"sinks": [],
 			"transformations": [],
 			"scriptLines": [
 				"source(output(",
-				"          datetime as string,",
-				"          machineID as string,",
-				"          volt as string,",
-				"          rotate as string,",
-				"          pressure as string,",
-				"          vibration as string",
+				"          datetime as timestamp,",
+				"          machineID as short,",
+				"          volt as double,",
+				"          rotate as double,",
+				"          pressure as double,",
+				"          vibration as double",
 				"     ),",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     ignoreNoFilesFound: false) ~> telemetria"
+				"     ignoreNoFilesFound: false) ~> telemetria",
+				"source(output(",
+				"          datetime as timestamp,",
+				"          machineID as short,",
+				"          errorID as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> source2"
 			]
 		}
 	}
