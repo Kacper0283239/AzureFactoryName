@@ -24,6 +24,12 @@
 			"transformations": [
 				{
 					"name": "errorstocolumns"
+				},
+				{
+					"name": "join1"
+				},
+				{
+					"name": "select1"
 				}
 			],
 			"scriptLines": [
@@ -46,11 +52,30 @@
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false) ~> source2",
-				"source2 pivot(groupBy(errorID),",
+				"source2 pivot(groupBy(datetime,",
+				"          machineID),",
 				"     pivotBy(errorID),",
 				"     suma = count(errorID),",
 				"     columnNaming: '$N$V',",
-				"     lateral: false) ~> errorstocolumns"
+				"     lateral: false) ~> errorstocolumns",
+				"telemetria, errorstocolumns join(telemetria@datetime == errorstocolumns@datetime",
+				"     && telemetria@machineID == errorstocolumns@machineID,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> join1",
+				"join1 select(mapColumn(",
+				"          datetime = telemetria@datetime,",
+				"          machineID = telemetria@machineID,",
+				"          volt,",
+				"          rotate,",
+				"          pressure,",
+				"          vibration,",
+				"          datetime = errorstocolumns@datetime,",
+				"          machineID = errorstocolumns@machineID",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1"
 			]
 		}
 	}
