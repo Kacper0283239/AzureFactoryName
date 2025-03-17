@@ -30,6 +30,9 @@
 				},
 				{
 					"name": "select1"
+				},
+				{
+					"name": "window1"
 				}
 			],
 			"scriptLines": [
@@ -55,7 +58,7 @@
 				"source2 pivot(groupBy(datetime,",
 				"          machineID),",
 				"     pivotBy(errorID),",
-				"     suma = count(errorID),",
+				"     sumawystapien = count(errorID),",
 				"     columnNaming: '$N$V',",
 				"     lateral: false) ~> errorstocolumns",
 				"telemetria, errorstocolumns join(telemetria@datetime == errorstocolumns@datetime",
@@ -75,7 +78,16 @@
 				"          machineID = errorstocolumns@machineID",
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> select1"
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"select1 window(asc(datetime, true),",
+				"     rangeSpecified: true,",
+				"     startRowOffset: -3L,",
+				"     endRowOffset: 0L,",
+				"     meanrotate_3h = mean(rotate),",
+				"          meanpressure_3h = mean(pressure),",
+				"          meanvibration_3h = mean(vibration),",
+				"          meanvolt_3h = mean(volt),",
+				"          stddevvolt_3h = stddev(volt)) ~> window1"
 			]
 		}
 	}
