@@ -21,7 +21,11 @@
 				}
 			],
 			"sinks": [],
-			"transformations": [],
+			"transformations": [
+				{
+					"name": "errorstocolumns"
+				}
+			],
 			"scriptLines": [
 				"source(output(",
 				"          datetime as timestamp,",
@@ -41,7 +45,12 @@
 				"     ),",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     ignoreNoFilesFound: false) ~> source2"
+				"     ignoreNoFilesFound: false) ~> source2",
+				"source2 pivot(groupBy(errorID),",
+				"     pivotBy(errorID),",
+				"     suma = count(errorID),",
+				"     columnNaming: '$N$V',",
+				"     lateral: false) ~> errorstocolumns"
 			]
 		}
 	}
