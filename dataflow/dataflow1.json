@@ -18,6 +18,13 @@
 						"type": "DatasetReference"
 					},
 					"name": "source2"
+				},
+				{
+					"dataset": {
+						"referenceName": "DelimitedText4",
+						"type": "DatasetReference"
+					},
+					"name": "source3"
 				}
 			],
 			"sinks": [],
@@ -36,6 +43,9 @@
 				},
 				{
 					"name": "window24h"
+				},
+				{
+					"name": "failurestocolumns"
 				}
 			],
 			"scriptLines": [
@@ -58,6 +68,14 @@
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false) ~> source2",
+				"source(output(",
+				"          datetime as string,",
+				"          machineID as string,",
+				"          failure as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> source3",
 				"source2 pivot(groupBy(datetime,",
 				"          machineID),",
 				"     pivotBy(errorID),",
@@ -96,7 +114,13 @@
 				"     startRowOffset: -24L,",
 				"     endRowOffset: 0L,",
 				"     mean24h_volt = mean(volt),",
-				"          mean24_rotate = mean(rotate)) ~> window24h"
+				"          mean24_rotate = mean(rotate)) ~> window24h",
+				"source3 pivot(groupBy(machineID,",
+				"          datetime),",
+				"     pivotBy(failure),",
+				"     failure = count(failure),",
+				"     columnNaming: '$N$V',",
+				"     lateral: true) ~> failurestocolumns"
 			]
 		}
 	}
