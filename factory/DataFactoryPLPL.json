@@ -1,0 +1,9 @@
+{
+	"name": "DataFactoryPLPL",
+	"location": "swedencentral",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "23c32d2d-9800-472a-b3ff-498ec79ee190",
+		"tenantId": "63441aef-da0e-4397-bb7e-f9d4705e963b"
+	}
+}
