@@ -1,5 +1,5 @@
 {
-	"name": "pipeline2",
+	"name": "zadanie1sql",
 	"properties": {
 		"activities": [
 			{
@@ -16,7 +16,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataflow": {
-						"referenceName": "dataflow2",
+						"referenceName": "zadanie1",
 						"type": "DataFlowReference"
 					},
 					"compute": {
