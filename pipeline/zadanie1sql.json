@@ -16,7 +16,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataflow": {
-						"referenceName": "zadanie1",
+						"referenceName": "failures_and_times2",
 						"type": "DataFlowReference"
 					},
 					"compute": {
