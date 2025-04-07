@@ -1,0 +1,169 @@
+{
+	"name": "dfmainflow",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"name": "Telemetry",
+					"description": "plik danych telemetrii (maly)"
+				},
+				{
+					"name": "Errors"
+				},
+				{
+					"name": "FailureWithTimesView"
+				},
+				{
+					"name": "Machines"
+				}
+			],
+			"sinks": [],
+			"transformations": [
+				{
+					"name": "ErrorsToColumns"
+				},
+				{
+					"name": "TelemetryJoinErrors"
+				},
+				{
+					"name": "Wyborkolumn"
+				},
+				{
+					"name": "window3h"
+				},
+				{
+					"name": "window24h"
+				},
+				{
+					"name": "mpPivotedErrors",
+					"description": "Creates an explicit mapping for each drifted column"
+				},
+				{
+					"name": "MainJoinFailures"
+				},
+				{
+					"name": "WyborKolumn2"
+				},
+				{
+					"name": "MainJoinMachines"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          datetime as timestamp,",
+				"          machineID as short,",
+				"          volt as double,",
+				"          rotate as double,",
+				"          pressure as double,",
+				"          vibration as double",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false) ~> Telemetry",
+				"source(output(",
+				"          datetime as timestamp,",
+				"          machineID as short,",
+				"          errorID as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false) ~> Errors",
+				"source(output(",
+				"          datetime as timestamp,",
+				"          machineid as integer,",
+				"          comp1ftime as double,",
+				"          comp2ftime as double,",
+				"          comp3ftime as double,",
+				"          comp4ftime as double",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false) ~> FailureWithTimesView",
+				"source(output(",
+				"          machineID as short,",
+				"          model as string,",
+				"          age as short",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false) ~> Machines",
+				"Errors pivot(groupBy(datetime,",
+				"          machineID),",
+				"     pivotBy(errorID),",
+				"     sumaWystapien = count(errorID),",
+				"     columnNaming: '$N_$V',",
+				"     lateral: false) ~> ErrorsToColumns",
+				"Telemetry, mpPivotedErrors join(Telemetry@datetime == ErrorsToColumns@datetime",
+				"     && Telemetry@machineID == ErrorsToColumns@machineID,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> TelemetryJoinErrors",
+				"TelemetryJoinErrors select(mapColumn(",
+				"          datetime = Telemetry@datetime,",
+				"          machineID = Telemetry@machineID,",
+				"          volt,",
+				"          rotate,",
+				"          pressure,",
+				"          vibration,",
+				"          sumaWystapien_error1,",
+				"          sumaWystapien_error2,",
+				"          sumaWystapien_error3,",
+				"          sumaWystapien_error4,",
+				"          sumaWystapien_error5",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> Wyborkolumn",
+				"WyborKolumn2 window(asc(datetime, true),",
+				"     startRowOffset: -3L,",
+				"     endRowOffset: 0L,",
+				"     mean_rotate_3h = mean(rotate),",
+				"          mean_pressure_3h = mean(pressure),",
+				"          mean_vibration_3h = mean(vibration),",
+				"          mean_volt_3h = mean(volt),",
+				"          stddev_volt_3h = stddev(volt),",
+				"     rangeSpecified: true) ~> window3h",
+				"window3h window(asc(datetime, true),",
+				"     startRowOffset: -24L,",
+				"     endRowOffset: 0L,",
+				"     mean_rotate_24h = mean(rotate),",
+				"          mean_volt_24h = mean(volt),",
+				"          mean_vibration_24h = mean(vibration),",
+				"          mean_pressure_24h = mean(pressure),",
+				"     rangeSpecified: true) ~> window24h",
+				"ErrorsToColumns derive(sumaWystapien_error1 = toLong(byName('sumaWystapien_error1')),",
+				"          sumaWystapien_error2 = toLong(byName('sumaWystapien_error2')),",
+				"          sumaWystapien_error3 = toLong(byName('sumaWystapien_error3')),",
+				"          sumaWystapien_error4 = toLong(byName('sumaWystapien_error4')),",
+				"          sumaWystapien_error5 = toLong(byName('sumaWystapien_error5'))) ~> mpPivotedErrors",
+				"Wyborkolumn, FailureWithTimesView join(Wyborkolumn@datetime == FailureWithTimesView@datetime",
+				"     && Wyborkolumn@machineID == FailureWithTimesView@machineid,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> MainJoinFailures",
+				"MainJoinFailures select(mapColumn(",
+				"          datetime = Wyborkolumn@datetime,",
+				"          machineID = Wyborkolumn@machineID,",
+				"          volt,",
+				"          rotate,",
+				"          pressure,",
+				"          vibration,",
+				"          sumaWystapien_error1,",
+				"          sumaWystapien_error2,",
+				"          sumaWystapien_error3,",
+				"          sumaWystapien_error4,",
+				"          sumaWystapien_error5,",
+				"          comp1ftime,",
+				"          comp2ftime,",
+				"          comp3ftime,",
+				"          comp4ftime",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> WyborKolumn2",
+				"window24h, Machines join(WyborKolumn2@machineID == Machines@machineID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> MainJoinMachines"
+			]
+		}
+	}
+}
